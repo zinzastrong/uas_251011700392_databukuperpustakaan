@@ -3,6 +3,8 @@ if (!isset($_SESSION['user_id'])) {
     header("Location: index.php?page=login");
     exit();
 }
+// Cek role user
+$isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -34,7 +36,9 @@ if (!isset($_SESSION['user_id'])) {
 <div class="page-wrap">
     <div class="page-header">
         <h2>Manajemen Buku</h2>
-        <a href="index.php?page=buku&action=create" class="btn btn-success"><i class="bi bi-plus-circle"></i> Tambah Buku</a>
+        <?php if ($isAdmin): ?>
+            <a href="index.php?page=buku&action=create" class="btn btn-success"><i class="bi bi-plus-circle"></i> Tambah Buku</a>
+        <?php endif; ?>
     </div>
     <?php if (isset($_SESSION['success'])): ?>
         <div class="alert alert-success"><?= $_SESSION['success']; unset($_SESSION['success']); ?></div>
@@ -59,7 +63,16 @@ if (!isset($_SESSION['user_id'])) {
     <div class="table-responsive">
         <table class="table table-bordered table-hover table-striped">
             <thead class="table-dark">
-                <tr><th>ID</th><th>Judul</th><th>Pengarang</th><th>Penerbit</th><th>Tahun</th><th>Kategori</th><th>Cover</th><th>Aksi</th></tr>
+                <tr>
+                    <th>ID</th>
+                    <th>Judul</th>
+                    <th>Pengarang</th>
+                    <th>Penerbit</th>
+                    <th>Tahun</th>
+                    <th>Kategori</th>
+                    <th>Cover</th>
+                    <th>Aksi</th>
+                </tr>
             </thead>
             <tbody>
                 <?php if (count($data) > 0): foreach ($data as $b): ?>
@@ -72,8 +85,12 @@ if (!isset($_SESSION['user_id'])) {
                     <td><?= htmlspecialchars($b['kategori']) ?></td>
                     <td><?= !empty($b['cover_file']) ? '<img src="uploads/'.$b['cover_file'].'" width="50" height="70" style="object-fit:cover;">' : '<span class="text-muted">-</span>' ?></td>
                     <td>
-                        <a href="index.php?page=buku&action=edit&id=<?= $b['id'] ?>" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
-                        <a href="index.php?page=buku&action=delete&id=<?= $b['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus?')"><i class="bi bi-trash"></i></a>
+                        <?php if ($isAdmin): ?>
+                            <a href="index.php?page=buku&action=edit&id=<?= $b['id'] ?>" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
+                            <a href="index.php?page=buku&action=delete&id=<?= $b['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus?')"><i class="bi bi-trash"></i></a>
+                        <?php else: ?>
+                            <span class="text-muted">Read Only</span>
+                        <?php endif; ?>
                     </td>
                 </tr>
                 <?php endforeach; else: ?>
