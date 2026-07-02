@@ -12,21 +12,34 @@ class BukuController {
         $this->bukuModel = new Buku();
     }
 
+    // === SEMUA USER BISA AKSES (READ ONLY) ===
     public function index() {
         $keyword = isset($_GET['search']) ? trim($_GET['search']) : '';
         $data = $keyword ? $this->bukuModel->search($keyword) : $this->bukuModel->getAll();
         include 'view/buku/index.php';
     }
 
+    // === KHUSUS ADMIN SAJA (CREATE, UPDATE, DELETE) ===
+    private function checkAdmin() {
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+            $_SESSION['error'] = 'Akses ditolak. Hanya admin yang diizinkan.';
+            header("Location: index.php?page=buku");
+            exit();
+        }
+    }
+
     public function create() {
+        $this->checkAdmin();
         include 'view/buku/create.php';
     }
 
     public function store() {
+        $this->checkAdmin();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header("Location: index.php?page=buku");
             exit();
         }
+        // ... sisanya sama seperti sebelumnya
         $errors = $this->validate($_POST, $_FILES, true);
         if (!empty($errors)) {
             $_SESSION['errors'] = $errors;
@@ -58,6 +71,7 @@ class BukuController {
     }
 
     public function edit() {
+        $this->checkAdmin();
         $id = $_GET['id'] ?? '';
         if (!$id) {
             header("Location: index.php?page=buku");
@@ -73,6 +87,7 @@ class BukuController {
     }
 
     public function update() {
+        $this->checkAdmin();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header("Location: index.php?page=buku");
             exit();
@@ -116,6 +131,7 @@ class BukuController {
     }
 
     public function delete() {
+        $this->checkAdmin();
         $id = $_GET['id'] ?? '';
         if ($id && $this->bukuModel->delete($id)) {
             $_SESSION['success'] = "Buku berhasil dihapus.";
@@ -126,6 +142,7 @@ class BukuController {
         exit();
     }
 
+    // === FUNGSI VALIDASI DAN UPLOAD (TIDAK BERUBAH) ===
     private function validate($post, $files, $checkId = true) {
         $errors = [];
         if ($checkId && (empty($post['id']) || $this->bukuModel->isIdExists($post['id']))) {
